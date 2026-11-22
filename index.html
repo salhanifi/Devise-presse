@@ -1,0 +1,35 @@
+<div class="card"><h2>2. Client & chantier</h2><div class="grid2">
+<div><label>Client</label><input id="client" placeholder="Nom du client"></div>
+<div><label>Adresse chantier</label><input id="chantier" placeholder="Adresse du chantier"></div>
+<div><label>Date</label><input id="date" type="date"></div>
+<div><label>N° devis</label><input id="num" value="DEV-2026-001"></div>
+</div><label>Description</label><textarea id="desc" rows="2" placeholder="Ex : Salle de bain complète + sol séjour"></textarea>
+<p class="muted">Mode facturation :</p><div id="modes"></div>
+<div class="grid3"><div><label>Remise (€ HT)</label><input id="remise" type="number" value="0"></div>
+<div><label>Acompte %</label><input id="acompte" type="number" value="30"></div>
+<div><label>Validité</label><input value="30 jours" readonly></div></div></div>
+
+<div class="card"><h2>3. Mes tarifs — Grille Loire 42 (HT, modifiables)</h2>
+<p class="muted">Prix par défaut Loire 42 (Saint-Étienne / Montbrison / Roanne) — main-d'œuvre HT. Modifie, puis clique sur Enregistrer. Ils sont conservés dans le navigateur de l'appareil.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="width:auto" onclick="appliquerLoire()">Appliquer la grille Loire 42</button>
+<button class="btn btn-ghost" style="width:auto" onclick="remettreZero()">Remettre à 0 €</button>
+<button class="btn btn-gold" style="width:auto" onclick="sauver()">Enregistrer mes tarifs</button></div>
+<div id="tarifs"></div><p id="msgTarif" class="ok"></p></div>
+
+<div class="card"><h2>4. Prestations — coche, quantité, prix</h2>
+<p class="muted">Seules les prestations cochées apparaîtront dans le devis. Recherche : <input id="recherche" placeholder="Rechercher : faïence, doufunction charger(){try{const s=JSON.parse(localStorage.getItem('devis42')||'{}'); if(s.prix) prix={...prix,...s.prix}; if(s.ent) document.getElementById('ent').value=s.ent;}catch(e){}}
+function sauver(){localStorage.setItem('devis42',JSON.stringify({prix,ent:document.getElementById('ent').value}));document.getElementById('msgTarif').textContent="Tarifs enregistrés ✓";setTimeout(()=>document.getElementById('msgTarif').textContent="",3000)}
+function appliquerLoire(){DATA.forEach(([f,items])=>items.forEach(([n,u,p])=>prix[n]=p));render();document.getElementById('msgTarif').textContent="Grille Loire 42 appliquée ✓"}
+function remettreZero(){Object.keys(prix).forEach(k=>prix[k]=0);render()}
+function fmt(n){return (Number(n)||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+" €"}
+function isInclus(n){return forfait>0 && INCLUS.includes(n)}
+function renderModes(){document.getElementById('modes').innerHTML=[["global","Fourniture + pose (global)"],["mo","Main-d'œuvre seule"],["separe","Fourniture et main-d'œuvre séparées"]].map(([v,l])=>`<span class="pill ${mode===v?'on':''}" onclick="mode='${v}';renderModes();render();apercu()">${l}</span>`).join('')}
+function render(){
+ let q=(document.getElementById('recherche')?.value||"").toLowerCase();
+ document.getElementById('forfaits').innerHTML=[1800,2000,2500].map(v=>`<span class="pill ${forfait===v?'on':''}" onclick="forfait=${v};render();calc()">${v} € HT</span>`).join('')+`<span class="pill ${forfait===0?'on':''}" onclick="forfait=0;render();calc()">Sans forfait</span>`;
+ document.getElementById('ctrlForfait').textContent=forfait?`Contrôle anti-doublon : OK — Forfait ${forfait} €, prestations incluses verrouillées à 0 €, non facturées 2 fois.`:"";
+ document.getElementById('tarifs').innerHTML=DATA.map(([f,items])=>`<h3>${f}</h3><table>${items.map(([n,u,p])=>`<tr><td>${n}</td><td>${u}</td><td><input type="number" value="${prix[n]}" onchange="prix['${n.replace(/'/g,"\\'")}']=Number(this.value);calc()"></td></tr>`).join('')}</table>`).join('');
+ document.getElementById('familles').innerHTML=DATA.map(([f,items])=>{
+  let lignes=items.filter(([n])=>n.toLowerCase().includes(q)).map(([n,u,p])=>{
+   let locked=isInclus(n);
+   return `<div class="row ${locked?'locked':''}"><input type="checkbox" ${coche[n]?'checked':''} ${locked?'disabled':''} onchange="coche['${n.replace(/'/g,"\\'")}']=this.checked;calc()"><div>${n} ${locked?'<span class="badge">Inclus forfait — 0 €</span>':''}</div><input type="number" step="0.5" value="${qte[n]}" onchange="qte['${n.replace(/
